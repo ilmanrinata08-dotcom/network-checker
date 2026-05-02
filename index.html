@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Checker - TKJ</title>
+    <style>
+
+        /* ══════════════════════════════════════
+           RESET & BASE
+        ══════════════════════════════════════ */
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }
+
+        /* ══════════════════════════════════════
+           CARD
+        ══════════════════════════════════════ */
+        .card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 0 40px rgba(0,255,100,0.04);
+        }
+
+        /* ══════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════ */
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: #00ff64;
+            font-size: 20px;
+            letter-spacing: 3px;
+        }
+
+        .header p {
+            color: #2a2a2a;
+            font-size: 11px;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        /* ══════════════════════════════════════
+           TAB
+           Logika: 2 tab = 2 fitur berbeda
+           Ping Checker & Port Scanner
+        ══════════════════════════════════════ */
+        .tab-wrapper {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px 6px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .tab.aktif {
+            border-color: #00ff64;
+            color: #00ff64;
+            background: rgba(0,255,100,0.04);
+        }
+
+        /* ══════════════════════════════════════
+           LABEL & INPUT
+        ══════════════════════════════════════ */
+        label {
+            display: block;
+            color: #444;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            margin-top: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            color: #00ff64;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        input:focus {
+            border-color: #00ff64;
+            box-shadow: 0 0 10px rgba(0,255,100,0.08);
+        }
+
+        input::placeholder { color: #1f1f1f; }
+
+        /* ══════════════════════════════════════
+           TOMBOL
+           Logika: disabled = abu-abu
+           cegah spam klik saat proses berjalan
+        ══════════════════════════════════════ */
+        .btn {
+            width: 100%;
+            padding: 13px;
+            background: #00ff64;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 14px;
+        }
+
+        .btn:hover    { background: #00cc50; }
+        .btn:disabled {
+            background: #1a1a1a;
+            color: #333;
+            cursor: not-allowed;
+        }
+
+        /* ══════════════════════════════════════
+           SKELETON LOADING
+           Logika: Efek shimmer dari Kode 2
+           Dipakai YouTube & Instagram
+        ══════════════════════════════════════ */
+        .skeleton-wrapper {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .skeleton-label {
+            height: 10px;
+            width: 35%;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: linear-gradient(
+                90deg,
+                #1a1a1a 25%,
+                #252525 50%,
+                #1a1a1a 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .skeleton-bar {
+            height: 44px;
+            border-radius: 8px;
+            background: linear-gradient(
+                90deg,
+                #1a1a1a 25%,
+                #252525 50%,
+                #1a1a1a 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            to { background-position-x: -200%; }
+        }
+
+        /* ══════════════════════════════════════
+           HASIL PING
+           Logika: 3 state → 3 warna berbeda
+           online=hijau | offline=merah | error=kuning
+        ══════════════════════════════════════ */
+        .hasil {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: none;
+        }
+
+        .hasil.online {
+            background: rgba(0,255,100,0.06);
+            border: 1px solid #00ff64;
+            color: #00ff64;
+        }
+
+        .hasil.offline {
+            background: rgba(255,50,50,0.06);
+            border: 1px solid #ff3232;
+            color: #ff3232;
+        }
+
+        .hasil.error {
+            background: rgba(255,200,0,0.06);
+            border: 1px solid #ffc800;
+            color: #ffc800;
+        }
+
+        .hasil.selesai {
+            background: transparent;
+            border: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        /* ══════════════════════════════════════
+           HASIL PORT SCANNER
+           Logika: Tiap port = 1 baris
+           open=hijau | closed=gelap | error=kuning
+        ══════════════════════════════════════ */
+        .scan-item {
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scan-item.open {
+            background: rgba(0,255,100,0.06);
+            border: 1px solid #00ff64;
+            color: #00ff64;
+        }
+
+        .scan-item.closed {
+            background: rgba(255,255,255,0.01);
+            border: 1px solid #1a1a1a;
+            color: #333;
+        }
+
+        .scan-item.error {
+            background: rgba(255,200,0,0.06);
+            border: 1px solid #ffc800;
+            color: #ffc800;
+        }
+
+        .scan-label {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        /* ══════════════════════════════════════
+           INFO PORT — Nama protokol tiap port
+        ══════════════════════════════════════ */
+        .port-info {
+            background: #0d0d0d;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 12px;
+            font-size: 10px;
+            color: #333;
+            letter-spacing: 1px;
+            line-height: 1.8;
+        }
+
+        .port-info span {
+            color: #00ff64;
+            opacity: 0.5;
+        }
+
+        /* ══════════════════════════════════════
+           RIWAYAT PING
+           Logika: Simpan 5 histori terakhir
+        ══════════════════════════════════════ */
+        .divider {
+            border: none;
+            border-top: 1px solid #1a1a1a;
+            margin: 20px 0 14px;
+        }
+
+        .riwayat-title {
+            color: #2a2a2a;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .riwayat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 0;
+            border-bottom: 1px solid #141414;
+            font-size: 11px;
+        }
+
+        .riwayat-item .rip { color: #333; }
+        .dot.online  { color: #00ff64; }
+        .dot.offline { color: #ff3232; }
+        .dot.error   { color: #ffc800; }
+
+        /* ══════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════ */
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #1a1a1a;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="card">
+
+    <!-- ══ HEADER ══ -->
+    <div class="header">
+        <h1>⚡ NETWORK CHECKER</h1>
+        <p>TKJ Network Tools · Python 3.13 · Flask</p>
+    </div>
+
+    <!-- ══ TAB ══ -->
+    <div class="tab-wrapper">
+        <button class="tab aktif" id="tabPing"
+                onclick="gantiTab('ping')">
+            📡 PING CHECKER
+        </button>
+        <button class="tab" id="tabScan"
+                onclick="gantiTab('scan')">
+            🔍 PORT SCANNER
+        </button>
+    </div>
+
+    <!-- ══ SECTION PING ══ -->
+    <div id="sectionPing">
+
+        <label>Target IP Address</label>
+        <input type="text" id="inputIP"
+               placeholder="Contoh: 8.8.8.8"
+               maxlength="15"/>
+
+        <button class="btn" id="tombolCek"
+                onclick="cekIP()">
+            📡 CEK SEKARANG
+        </button>
+
+    </div>
+
+    <!-- ══ SECTION PORT SCANNER ══ -->
+    <div id="sectionScan" style="display:none">
+
+        <label>Target IP Address</label>
+        <input type="text" id="inputScanIP"
+               placeholder="Contoh: 127.0.0.1"
+               maxlength="15"/>
+
+        <label>Daftar Port (pisah koma)</label>
+        <input type="text" id="inputPorts"
+               value="21,22,23,53,80,443,3306,8080,8291"
+               placeholder="21,22,23,53,80,443,3306,8080,8291"/>
+
+        <!-- Info nama protokol tiap port -->
+        <div class="port-info">
+            <span>21</span> FTP &nbsp;·&nbsp;
+            <span>22</span> SSH &nbsp;·&nbsp;
+            <span>23</span> Telnet &nbsp;·&nbsp;
+            <span>53</span> DNS<br>
+            <span>80</span> HTTP &nbsp;·&nbsp;
+            <span>443</span> HTTPS &nbsp;·&nbsp;
+            <span>3306</span> MySQL<br>
+            <span>8080</span> HTTP-Alt &nbsp;·&nbsp;
+            <span>8291</span> Winbox (Mikrotik)
+        </div>
+
+        <button class="btn" id="tombolScan"
+                onclick="scanPort()">
+            🔍 SCAN SEKARANG
+        </button>
+
+    </div>
+
+    <!-- ══ SKELETON LOADING ══ -->
+    <div class="skeleton-wrapper" id="skeletonWrapper">
+        <div class="skeleton-label"></div>
+        <div class="skeleton-bar"></div>
+    </div>
+
+    <!-- ══ HASIL ══ -->
+    <div class="hasil" id="hasil"></div>
+
+    <!-- ══ RIWAYAT ══ -->
+    <div id="riwayatWrapper" style="display:none">
+        <hr class="divider">
+        <div class="riwayat-title">📋 RIWAYAT</div>
+        <div id="riwayatList"></div>
+    </div>
+
+    <div class="footer">
+        localhost:8000 · Python 3.13 · Flask
+    </div>
+
+</div>
+<script>
+
+    // ══════════════════════════════════════
+    // GANTI TAB
+    // Logika: Sembunyikan section lama
+    // Tampilkan section baru + reset hasil
+    // ══════════════════════════════════════
+    function gantiTab(tab) {
+        const sping  = document.getElementById("sectionPing");
+        const sscan  = document.getElementById("sectionScan");
+        const tping  = document.getElementById("tabPing");
+        const tscan  = document.getElementById("tabScan");
+        const hasil  = document.getElementById("hasil");
+        const sk     = document.getElementById("skeletonWrapper");
+
+        // Reset tampilan
+        hasil.style.display  = "none";
+        hasil.innerHTML      = "";
+        sk.style.display     = "none";
+
+        if (tab === "ping") {
+            sping.style.display = "block";
+            sscan.style.display = "none";
+            tping.classList.add("aktif");
+            tscan.classList.remove("aktif");
+        } else {
+            sping.style.display = "none";
+            sscan.style.display = "block";
+            tscan.classList.add("aktif");
+            tping.classList.remove("aktif");
+        }
+    }
+
+    // ══════════════════════════════════════
+    // PING CHECKER
+    // Logika Alur:
+    // Cek kosong → cek internet →
+    // kirim ke Python → tampilkan hasil
+    // ══════════════════════════════════════
+    async function cekIP() {
+
+        const input  = document.getElementById("inputIP").value.trim();
+        const hasil  = document.getElementById("hasil");
+        const sk     = document.getElementById("skeletonWrapper");
+        const tombol = document.getElementById("tombolCek");
+
+        // Layer 1: Cek kosong
+        if (input === "") {
+            tampilHasil("⚠️ Isi dulu IP-nya!", "error");
+            return;
+        }
+
+        // Layer 2: Cek koneksi HP
+        if (!navigator.onLine) {
+            tampilHasil("⚠️ HP tidak ada koneksi internet!", "error");
+            return;
+        }
+
+        // Loading state
+        tombol.disabled     = true;
+        tombol.textContent  = "⏳ Mengecek...";
+        sk.style.display    = "block";
+        hasil.style.display = "none";
+
+        try {
+            // Layer 3: Kirim ke Python /cek
+            const res  = await fetch("/cek", {
+                method : "POST",
+                headers: {"Content-Type":"application/json"},
+                body   : JSON.stringify({ip: input})
+            });
+            const data = await res.json();
+
+            tampilHasil(data.pesan, data.status);
+            tambahRiwayat(input, data.status);
+
+        } catch(e) {
+            // Layer 4: Graceful degradation
+            tampilHasil(
+                "❌ Maaf, sedang ada gangguan teknis. Coba lagi nanti.",
+                "error"
+            );
+        }
+
+        // Reset tombol
+        tombol.disabled    = false;
+        tombol.textContent = "📡 CEK SEKARANG";
+        sk.style.display   = "none";
+    }
+
+    // ══════════════════════════════════════
+    // PORT SCANNER
+    // Logika Alur:
+    // Cek kosong → konversi port string ke array
+    // → kirim ke Python /scan → tampilkan per baris
+    // ══════════════════════════════════════
+
+    // Tabel nama protokol
+    const namaPort = {
+        "21"  : "FTP",
+        "22"  : "SSH",
+        "23"  : "Telnet",
+        "53"  : "DNS",
+        "80"  : "HTTP",
+        "443" : "HTTPS",
+        "3306": "MySQL",
+        "8080": "HTTP-Alt",
+        "8291": "Winbox"
+    };
+
+    async function scanPort() {
+
+        const ip     = document.getElementById("inputScanIP").value.trim();
+        const ports  = document.getElementById("inputPorts").value.trim();
+        const hasil  = document.getElementById("hasil");
+        const sk     = document.getElementById("skeletonWrapper");
+        const tombol = document.getElementById("tombolScan");
+
+        // Layer 1: Cek kosong
+        if (!ip || !ports) {
+            tampilHasil("⚠️ Isi IP dan Port dulu!", "error");
+            return;
+        }
+
+        // Layer 2: Cek koneksi HP
+        if (!navigator.onLine) {
+            tampilHasil("⚠️ HP tidak ada koneksi internet!", "error");
+            return;
+        }
+
+        // Konversi "21,22,80" → ["21","22","80"]
+        const portList = ports.split(",")
+                              .map(p => p.trim())
+                              .filter(p => p !== "");
+
+        // Loading state
+        tombol.disabled     = true;
+        tombol.textContent  = "⏳ Scanning...";
+        sk.style.display    = "block";
+        hasil.style.display = "none";
+        hasil.innerHTML     = "";
+
+        try {
+            // Kirim ke Python /scan
+            const res  = await fetch("/scan", {
+                method : "POST",
+                headers: {"Content-Type":"application/json"},
+                body   : JSON.stringify({ip:ip, ports:portList})
+            });
+            const data = await res.json();
+
+            sk.style.display = "none";
+
+            if (data.status === "error") {
+                tampilHasil(data.pesan, "error");
+
+            } else {
+
+                hasil.style.display = "block";
+                hasil.className     = "hasil selesai";
+                hasil.innerHTML     = "";
+
+                // Tampilkan tiap port satu baris
+                data.hasil.forEach(item => {
+                    const div   = document.createElement("div");
+                    div.className = `scan-item ${item.status}`;
+
+                    const nama  = namaPort[String(item.port)] || "–";
+                    const icon  = item.status === "open"   ? "✅" :
+                                  item.status === "closed" ? "❌" : "⚠️";
+
+                    div.innerHTML = `
+                        <span>${icon} Port ${item.port}</span>
+                        <span class="scan-label">${nama}</span>
+                        <span>${item.status.toUpperCase()}</span>
+                    `;
+                    hasil.appendChild(div);
+                });
+
+                // Hitung berapa yang open
+                const openCount = data.hasil
+                    .filter(i => i.status === "open").length;
+
+                tambahRiwayat(
+                    `${ip} (${openCount} open)`,
+                    openCount > 0 ? "online" : "offline"
+                );
+            }
+
+        } catch(e) {
+            tampilHasil(
+                "❌ Maaf, sedang ada gangguan teknis. Coba lagi nanti.",
+                "error"
+            );
+        }
+
+        tombol.disabled    = false;
+        tombol.textContent = "🔍 SCAN SEKARANG";
+        sk.style.display   = "none";
+    }
+
+    // ══════════════════════════════════════
+    // TAMPIL HASIL
+    // SRP: fungsi tampilan dipisah dari logika
+    // ══════════════════════════════════════
+    function tampilHasil(pesan, status) {
+        const hasil = document.getElementById("hasil");
+        hasil.innerHTML     = pesan;
+        hasil.className     = "hasil " + status;
+        hasil.style.display = "block";
+    }
+
+    // ══════════════════════════════════════
+    // RIWAYAT — simpan 5 histori terakhir
+    // ══════════════════════════════════════
+    function tambahRiwayat(ip, status) {
+        const wrapper = document.getElementById("riwayatWrapper");
+        const list    = document.getElementById("riwayatList");
+        wrapper.style.display = "block";
+
+        const emoji = {
+            online:"🟢", offline:"🔴", error:"⚠️"
+        };
+
+        const item = document.createElement("div");
+        item.className = "riwayat-item";
+        item.innerHTML = `
+            <span class="rip">${ip}</span>
+            <span class="dot ${status}">
+                ${emoji[status]||"⚠️"} ${status.toUpperCase()}
+            </span>`;
+
+        list.insertBefore(item, list.firstChild);
+        if (list.children.length > 5)
+            list.removeChild(list.lastChild);
+    }
+
+    // ══════════════════════════════════════
+    // SHORTCUT ENTER
+    // ══════════════════════════════════════
+    document.getElementById("inputIP")
+        .addEventListener("keypress", e => {
+            if (e.key === "Enter") cekIP();
+        });
+
+    document.getElementById("inputPorts")
+        .addEventListener("keypress", e => {
+            if (e.key === "Enter") scanPort();
+        });
+
+</script>
+</body>
+</html>
