@@ -206,9 +206,14 @@ def scan_port():
 # ══════════════════════════════════════
 #  JALANKAN SERVER
 # ══════════════════════════════════════
-if __name__ == "__main__":
-    print("=" * 40)
+def cetak_banner():
+    os.system("clear")
+    os.system("toilet -f pagga --metal 'NETWORK CHECKER'")
+    print(" 📡 STATUS : ONLINE  |  🛠️  MODE: SECURE")
+    print("—" * 45)
     print("  🌐 Server aktif di localhost:8000")
-    print("  📱 Buka Chrome → ketik localhost:8000")
-    print("=" * 40)
+    print("  ⚡ Rate Limit: 5 request / 10 detik")
+    print("—" * 45)
+if __name__ == "__main__":
+    cetak_banner()
     app.run(host="0.0.0.0", port=8000, debug=True)
