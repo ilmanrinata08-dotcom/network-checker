@@ -25,3 +25,14 @@ def validate_ports(ports: list) -> tuple[bool, str]:
         except:
             return False, f"Port {p} bukan angka!"
     return True, "ok"
+
+def validate_domain(domain: str) -> bool:
+    domain = domain.replace("https://","").replace("http://","").split("/")[0]
+    pattern = r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$"
+    return bool(re.match(pattern, domain))
+
+def clean_domain(domain: str) -> str:
+    domain = domain.replace("https://","").replace("http://","")
+    domain = domain.split("/")[0]
+    domain = domain.split(":")[0]
+    return domain.strip().lower()
